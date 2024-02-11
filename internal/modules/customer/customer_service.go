@@ -3,7 +3,7 @@ package customer
 import (
 	"context"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/database"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"
 	"github.com/jackc/pgx/v5"
 )
 

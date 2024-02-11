@@ -1,10 +1,10 @@
-package utils
+package helper
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/customer"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/customer"
 	"github.com/labstack/echo/v4"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/utils"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/helper"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 )
@@ -33,8 +33,7 @@ func createTransaction(c echo.Context) error {
 
 	trx, err := CreateTransaction(customerId, body)
 	if err != nil {
-		return utils.HandleHttpError(c, err)
+		return helper.HandleHttpError(c, err)
 	}
-
 	return c.JSON(http.StatusOK, trx)
 }

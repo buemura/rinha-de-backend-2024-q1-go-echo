@@ -2,10 +2,11 @@ package main
 
 import (
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/config"
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/database"
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/statement"
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/transaction"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/statement"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/transaction"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func init() {
@@ -13,14 +14,16 @@ func init() {
 	database.Connect()
 }
 
-func setupRoutes(e *echo.Echo) {
-	statement.SetupRoutes(e)
-	transaction.SetupRoutes(e)
-}
-
 func main() {
 	e := echo.New()
-	setupRoutes(e)
+	setupServerMiddlewares(e)
 	host := ":" + config.PORT
 	e.Start(host)
+}
+
+func setupServerMiddlewares(app *echo.Echo) {
+	app.Use(middleware.Recover())
+	app.Use(middleware.Secure())
+	statement.SetupRoutes(app)
+	transaction.SetupRoutes(app)
 }
