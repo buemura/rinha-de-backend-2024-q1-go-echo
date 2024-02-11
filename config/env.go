@@ -1,6 +1,6 @@
 package config
 
-import "github.com/spf13/viper"
+import "os"
 
 var (
 	PORT         string
@@ -8,11 +8,6 @@ var (
 )
 
 func LoadEnv() {
-	viper.SetConfigFile(".env")
-	if err := viper.ReadInConfig(); err != nil {
-		panic("Failed to load environment variables")
-	}
-
-	PORT = viper.GetString("PORT")
-	DATABASE_URL = viper.GetString("DATABASE_URL")
+	PORT = os.Getenv("PORT")
+	DATABASE_URL = os.Getenv("DATABASE_URL")
 }

@@ -21,6 +21,6 @@ func setupRoutes(e *echo.Echo) {
 func main() {
 	e := echo.New()
 	setupRoutes(e)
-	host := "0.0.0.0:" + config.PORT
+	host := ":" + config.PORT
 	e.Start(host)
 }
