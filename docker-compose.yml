@@ -5,6 +5,7 @@ services:
     build: .
     hostname: api01
     environment:
+      - PORT=8080
       - DATABASE_URL=postgresql://admin:123@db:5432/rinha
     depends_on:
       - db

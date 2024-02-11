@@ -1,11 +1,10 @@
 package statement
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/customer"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/utils"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,14 +20,8 @@ func getStatement(c echo.Context) error {
 	}
 
 	stt, err := GetStatement(customerId)
-
 	if err != nil {
-		switch {
-		case errors.Is(err, customer.ErrCustomerNotFound):
-			return c.NoContent(http.StatusNotFound)
-		default:
-			return c.NoContent(http.StatusInternalServerError)
-		}
+		return utils.HandleHttpError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, stt)
