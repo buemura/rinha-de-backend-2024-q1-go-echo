@@ -40,4 +40,4 @@ go run cmd/http/main.go
 
 ## Result
 
-![Result](.docs/test.jpeg)
+![Result](.docs/result.png)
