@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/config"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/config"
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/statement"
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/transaction"
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"

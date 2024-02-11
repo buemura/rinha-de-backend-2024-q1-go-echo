@@ -16,7 +16,19 @@
 - Run: **(Requires Docker and docker-compose)**
 
 ```bash
+# Prepare environment
 sh scripts/env_up.sh
+```
+
+```bash
+# Stress Test
+cd .gatling
+sh executar-teste-local.sh
+```
+
+```bash
+# Run app locally
+go run cmd/http/main.go
 ```
 
 ## Author

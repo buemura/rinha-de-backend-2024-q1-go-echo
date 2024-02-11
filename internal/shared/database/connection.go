@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/config"
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
