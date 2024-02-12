@@ -1,6 +1,7 @@
 # Rinha de Backend 2024 Q1
 
-- [Repository link](https://github.com/buemura/rinha-de-backend-2024-q1-go-echo)
+- [Original challenge repository](https://github.com/zanfranceschi/rinha-de-backend-2024-q1)
+- [Source code](https://github.com/buemura/rinha-de-backend-2024-q1-go-echo)
 
 ## Tech Stack
 
