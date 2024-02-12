@@ -36,7 +36,7 @@ func GetTransactions(customerID int) ([]*Transaction, error) {
 	return transactions, nil
 }
 
-func CreateTransaction(customerID int, data *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+func CreateTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
 	customerBalance, err := customer.GetCustomerBalance(customerID)
 	if err != nil {
 		if customerBalance == nil {
@@ -45,59 +45,58 @@ func CreateTransaction(customerID int, data *CreateTransactionRequest) (*CreateT
 		return nil, err
 	}
 
-	if data.Tipo == "c" {
-		customerBalance.Saldo += data.Valor
-	}
-
-	if data.Tipo == "d" {
-		if (customerBalance.Saldo-data.Valor)*-1 > customerBalance.Limite {
-			return nil, customer.ErrCustomerNoLimit
-		}
-		customerBalance.Saldo -= data.Valor
-	}
-
-	err = insertTransaction(customerID, customerBalance.Saldo, data.Valor, string(data.Tipo), data.Descricao)
+	trxRes, err := insertTransaction(customerID, customerBalance.Limite, trx.Valor, string(trx.Tipo), trx.Descricao)
 	if err != nil {
 		return nil, err
 	}
-
-	return &CreateTransactionResponse{
-		Saldo:  customerBalance.Saldo,
-		Limite: customerBalance.Limite,
-	}, nil
+	return trxRes, nil
 }
 
-func insertTransaction(customerID, balance, trxAmount int, trxType, description string) error {
-	tx, err := database.Conn.Begin(context.Background())
-	if err != nil {
-		return err
+func insertTransaction(customerID, limit, trxAmount int, trxType, description string) (*CreateTransactionResponse, error) {
+    tx, err := database.Conn.Begin(context.Background())
+    if err != nil {
+        return nil, err
+    }
+    defer tx.Rollback(context.Background())
+
+	var balance int
+    err = tx.QueryRow(context.Background(), "SELECT valor FROM saldos WHERE cliente_id = $1 FOR UPDATE", customerID).Scan(&balance)
+    if err != nil {
+        return nil, err
+    }
+
+	if trxType == "c" {
+		balance += trxAmount
 	}
-	defer tx.Rollback(context.Background())
-
-	batch := &pgx.Batch{}
-	batch.Queue(`
-		INSERT INTO transacoes (cliente_id, valor, tipo, descricao, realizada_em) 
-		VALUES ($1, $2, $3, $4, $5)
-	`, customerID, trxAmount, trxType, description, time.Now())
-
-	batch.Queue(`
-		UPDATE saldos SET valor = $1 WHERE cliente_id = $2
-	`, balance, customerID)
-
-	bRes := tx.SendBatch(context.Background(), batch)
-	_, err = bRes.Exec()
-	if err != nil {
-		return err
-	}
-	err = bRes.Close()
-	if err != nil {
-		return err
+	if trxType == "d" {
+		if (balance-trxAmount)*-1 > limit {
+			return nil, customer.ErrCustomerNoLimit
+		}
+		balance -= trxAmount
 	}
 
-	err = tx.Commit(context.Background())
-	if err != nil {
-		return err
-	}
+    batch := &pgx.Batch{}
+    batch.Queue(`
+        INSERT INTO transacoes (cliente_id, valor, tipo, descricao, realizada_em) 
+        VALUES ($1, $2, $3, $4, $5)
+    `, customerID, trxAmount, trxType, description, time.Now())
+    batch.Queue(`
+        UPDATE saldos SET valor = $1 WHERE cliente_id = $2
+    `, balance, customerID)
 
-	return nil
+    bRes := tx.SendBatch(context.Background(), batch)
+    if _, err := bRes.Exec(); err != nil {
+        return nil, err
+    }
+    if err := bRes.Close(); err != nil {
+		return nil, err
+    }
+    if err := tx.Commit(context.Background()); err != nil {
+		return nil, err
+    }
+
+    return &CreateTransactionResponse{
+		Saldo:  balance,
+		Limite: limit,
+	}, nil
 }
