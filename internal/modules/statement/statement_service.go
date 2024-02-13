@@ -10,7 +10,7 @@ import (
 func GetStatement(customerID int) (*StatementResponse, error) {
 	customerBalance, err := customer.GetCustomerBalance(customerID)
 	if err != nil {
-		if customerBalance == nil {
+		if customerBalance == (customer.CustomerBalance{}) {
 			return nil, customer.ErrCustomerNotFound
 		}
 		return nil, err
@@ -22,7 +22,7 @@ func GetStatement(customerID int) (*StatementResponse, error) {
 	}
 
 	return &StatementResponse{
-		Saldo: &StatementSaldo{
+		Saldo: StatementSaldo{
 			Total:       customerBalance.Saldo,
 			Limite:      customerBalance.Limite,
 			DataExtrato: time.Now(),

@@ -7,19 +7,19 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func GetCustomerBalance(customerID int) (*CustomerBalance, error) {
+func GetCustomerBalance(customerID int) (CustomerBalance, error) {
 	rows, err := database.Conn.Query(
 		context.Background(),
-		"SELECT c.id, c.nome, c.limite, s.valor AS saldo FROM clientes c INNER JOIN saldos s ON c.id = s.cliente_id WHERE c.id = $1",
+		"SELECT c.limite, s.valor AS saldo FROM clientes c INNER JOIN saldos s ON c.id = s.cliente_id WHERE c.id = $1",
 		customerID,
 	)
 	if err != nil {
-		return nil, err
+		return CustomerBalance{}, err
 	}
 
-	customerBalance, err := pgx.CollectOneRow(rows, pgx.RowToAddrOfStructByPos[CustomerBalance])
+	customerBalance, err := pgx.CollectOneRow(rows, pgx.RowToStructByPos[CustomerBalance])
 	if err != nil {
-		return nil, err
+		return CustomerBalance{}, err
 	}
 	return customerBalance, nil
 }
