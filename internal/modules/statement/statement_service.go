@@ -10,10 +10,10 @@ import (
 func GetStatement(customerID int) (*StatementResponse, error) {
 	customerBalance, err := customer.GetCustomer(customerID)
 	if err != nil {	
+		if customerBalance == nil {
+			return nil, customer.ErrCustomerNotFound
+		}
 		return nil, err
-	}
-	if customerBalance == nil {
-		return nil, customer.ErrCustomerNotFound
 	}
 
 	transactions, err := transaction.GetTransactions(customerID)

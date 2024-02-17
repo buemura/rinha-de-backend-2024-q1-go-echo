@@ -37,40 +37,40 @@ func GetTransactions(customerID int) ([]Transaction, error) {
 }
 
 func CreateTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
-	cust, err := customer.GetCustomer(customerID)
-	if err != nil {
-		return nil, err
-	}
-	if cust == nil {
-		return nil, customer.ErrCustomerNotFound
-	}
-	trxRes, err := insertTransaction(cust, trx)
+	trxRes, err := insertTransaction(customerID, trx)
 	if err != nil {
 		return nil, err
 	}
 	return trxRes, nil
 }
 
-func insertTransaction(cust *customer.Customer, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+func insertTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
 	tx, err := database.Conn.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
 
-	var balance int
-	err = tx.QueryRow(context.Background(), "SELECT account_balance FROM customers WHERE id = $1 FOR UPDATE", cust.ID).Scan(&balance)
+	var id, accountBalance, accountLimit int
+	err = tx.QueryRow(
+		context.Background(), 
+		"SELECT id, account_limit, account_balance FROM customers WHERE id = $1 FOR UPDATE", 
+		customerID,
+	).Scan(&id, &accountLimit, &accountBalance)
 	if err != nil {
+		if id == 0 {
+			return nil, customer.ErrCustomerNotFound
+		}
 		return nil, err
 	}
 
 	if trx.Type == "c" {
-		balance += trx.Amount
+		accountBalance += trx.Amount
 	}
 	if trx.Type == "d" {
-		balance -= trx.Amount
+		accountBalance -= trx.Amount
 	}
-	if cust.AccountLimit + balance < 0 {
+	if accountLimit + accountBalance < 0 {
 		return nil, customer.ErrCustomerNoLimit
 	}
 
@@ -78,10 +78,10 @@ func insertTransaction(cust *customer.Customer, trx *CreateTransactionRequest) (
 	batch.Queue(`
         INSERT INTO transactions (customer_id, amount, type, description, created_at) 
         VALUES ($1, $2, $3, $4, $5)
-    `, cust.ID, trx.Amount, trx.Type, trx.Description, time.Now())
+    `, customerID, trx.Amount, trx.Type, trx.Description, time.Now())
 	batch.Queue(`
         UPDATE customers SET account_balance = $1 WHERE id = $2
-    `, balance, cust.ID)
+    `, accountBalance, customerID)
 
 	bRes := tx.SendBatch(context.Background(), batch)
 	if _, err := bRes.Exec(); err != nil {
@@ -96,7 +96,7 @@ func insertTransaction(cust *customer.Customer, trx *CreateTransactionRequest) (
 
 
 	return &CreateTransactionResponse{
-		Balance:  balance,
-		Limit: 	  cust.AccountLimit,
+		Balance:  accountBalance,
+		Limit: 	  accountLimit,
 	}, nil
 }
