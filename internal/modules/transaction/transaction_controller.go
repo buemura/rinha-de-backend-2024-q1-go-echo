@@ -27,7 +27,7 @@ func createTransaction(c echo.Context) error {
 	if err := validate.Struct(body); err != nil {
 		return c.NoContent(http.StatusUnprocessableEntity)
 	}
-	if body.Tipo != "c" && body.Tipo != "d" {
+	if body.Type != "c" && body.Type != "d" {
 		return c.NoContent(http.StatusUnprocessableEntity)
 	}
 
