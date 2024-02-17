@@ -1,12 +1,12 @@
 --- TABLES
-CREATE TABLE customers (
+CREATE UNLOGGED TABLE customers (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(50) NOT NULL,
 	account_limit INTEGER NOT NULL,
 	account_balance INTEGER NOT NULL
 );
 
-CREATE TABLE transactions (
+CREATE UNLOGGED TABLE transactions (
 	id SERIAL PRIMARY KEY,
 	customer_id INTEGER NOT NULL,
 	amount INTEGER NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE transactions (
 );
 
 --- INDEX
-CREATE INDEX idx_customers_id ON customers (id);
+CREATE INDEX idx_customers_id ON customers (id) INCLUDE (account_limit, account_balance);
 CREATE INDEX idx_transactions_customer_id ON transactions (customer_id);
 CREATE INDEX idx_transactions_customer_id_created_at ON transactions (customer_id, created_at DESC);
 
