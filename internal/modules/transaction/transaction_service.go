@@ -37,14 +37,23 @@ func GetTransactions(customerID int) ([]Transaction, error) {
 }
 
 func CreateTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
-	trxRes, err := insertTransaction(customerID, trx)
+	var trxRes *CreateTransactionResponse
+	var err error
+
+	if trx.Type == "d" {
+		trxRes, err = InsertDebitTransaction(customerID, trx)
+	}
+	if trx.Type == "c" {
+		trxRes, err = InsertCreditTransaction(customerID, trx)
+	}
+	
 	if err != nil {
 		return nil, err
 	}
 	return trxRes, nil
 }
 
-func insertTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+func InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
 	tx, err := database.Conn.Begin(context.Background())
 	if err != nil {
 		return nil, err
@@ -64,12 +73,7 @@ func insertTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTr
 		return nil, err
 	}
 
-	if trx.Type == "c" {
-		accountBalance += trx.Amount
-	}
-	if trx.Type == "d" {
-		accountBalance -= trx.Amount
-	}
+	accountBalance -= trx.Amount
 	if accountLimit + accountBalance < 0 {
 		return nil, customer.ErrCustomerNoLimit
 	}
@@ -94,9 +98,55 @@ func insertTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTr
 		return nil, err
 	}
 
-
 	return &CreateTransactionResponse{
 		Balance:  accountBalance,
 		Limit: 	  accountLimit,
 	}, nil
+}
+
+func InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+    _, err := database.Conn.Exec(
+        context.Background(),
+        `
+        UPDATE customers
+        SET account_balance = account_balance + $1
+        WHERE id = $2
+        `,
+        trx.Amount,
+        customerID,
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    _, err = database.Conn.Exec(
+        context.Background(),
+        `
+        INSERT INTO transactions (customer_id, amount, type, description, created_at) 
+        VALUES ($1, $2, $3, $4, $5)
+        `,
+        customerID, trx.Amount, trx.Type, trx.Description, time.Now(),
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    var accountBalance, accountLimit int
+    err = database.Conn.QueryRow(
+        context.Background(),
+        `
+        SELECT account_balance, account_limit
+        FROM customers
+        WHERE id = $1
+        `,
+        customerID,
+    ).Scan(&accountBalance, &accountLimit)
+    if err != nil {
+        return nil, err
+    }
+
+    return &CreateTransactionResponse{
+        Balance: accountBalance,
+        Limit:   accountLimit,
+    }, nil
 }
