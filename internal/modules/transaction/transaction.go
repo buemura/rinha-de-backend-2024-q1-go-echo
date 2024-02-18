@@ -10,9 +10,9 @@ type Transaction struct {
 }
 
 type CreateTransactionRequest struct {
-	Amount      int    `json:"valor" validate:"required,min=1"`
-	Type        string `json:"tipo" validate:"required"`
-	Description string `json:"descricao" validate:"required,min=1,max=10"`
+	Amount      int    `json:"valor"`
+	Type        string `json:"tipo"`
+	Description string `json:"descricao"`
 }
 
 type CreateTransactionResponse struct {

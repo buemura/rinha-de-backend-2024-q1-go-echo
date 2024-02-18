@@ -1,9 +1,8 @@
 --- TABLES
 CREATE UNLOGGED TABLE customers (
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(50) NOT NULL,
+	id INT PRIMARY KEY,
 	account_limit INTEGER NOT NULL,
-	account_balance INTEGER NOT NULL
+	account_balance INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE UNLOGGED TABLE transactions (
@@ -17,6 +16,8 @@ CREATE UNLOGGED TABLE transactions (
 		FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
+ALTER TABLE transactions SET (autovacuum_enabled = false);
+
 --- INDEX
 CREATE INDEX idx_customers_id ON customers (id) INCLUDE (account_limit, account_balance);
 CREATE INDEX idx_transactions_customer_id ON transactions (customer_id);
@@ -25,12 +26,7 @@ CREATE INDEX idx_transactions_customer_id_created_at ON transactions (customer_i
 --- SEED
 DO $$
 BEGIN
-	INSERT INTO customers (name, account_limit, account_balance)
-	VALUES
-		('o barato sai caro', 1000 * 100, 0),
-		('zan corp ltda', 800 * 100, 0),
-		('les cruders', 10000 * 100, 0),
-		('padaria joia de cocaia', 100000 * 100, 0),
-		('kid mais', 5000 * 100, 0);
+	INSERT INTO customers (id, account_limit)
+	VALUES (1, 1000 * 100), (2, 800 * 100), (3, 10000 * 100), (4, 100000 * 100), (5, 5000 * 100);
 END;
 $$;
