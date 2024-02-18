@@ -79,7 +79,7 @@ func InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*Cre
 	batch := &pgx.Batch{}
 	batch.Queue(`
         INSERT INTO transactions (customer_id, amount, type, description) 
-        VALUES ($1, $2, $3, $4, $5)
+        VALUES ($1, $2, $3, $4)
     `, customerID, trx.Amount, trx.Type, trx.Description)
 	batch.Queue(`
         UPDATE customers SET account_balance = $1 WHERE id = $2
