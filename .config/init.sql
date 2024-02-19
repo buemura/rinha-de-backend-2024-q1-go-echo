@@ -16,8 +16,6 @@ CREATE UNLOGGED TABLE transactions (
 		FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
-ALTER TABLE transactions SET (autovacuum_enabled = false);
-
 --- INDEX
 CREATE INDEX idx_customers_id ON customers (id) INCLUDE (account_limit, account_balance);
 CREATE INDEX idx_transactions_customer_id ON transactions (customer_id);
