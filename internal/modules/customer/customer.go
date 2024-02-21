@@ -6,9 +6,8 @@ var ErrCustomerNotFound = errors.New("customer not found")
 
 var ErrCustomerNoLimit = errors.New("customer has no limit")
 
-type CustomerBalance struct {
-	ID     int    `json:"id"`
-	Nome   string `json:"nome"`
-	Limite int    `json:"limite"`
-	Saldo  int    `json:"saldo"`
+type Customer struct {
+	ID 				int
+	AccountLimit    int `json:"limite"`
+	AccountBalance  int `json:"saldo"`
 }

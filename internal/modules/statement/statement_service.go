@@ -8,7 +8,7 @@ import (
 )
 
 func GetStatement(customerID int) (*StatementResponse, error) {
-	customerBalance, err := customer.GetCustomerBalance(customerID)
+	customerBalance, err := customer.GetCustomer(customerID)
 	if err != nil {
 		if customerBalance == nil {
 			return nil, customer.ErrCustomerNotFound
@@ -22,9 +22,9 @@ func GetStatement(customerID int) (*StatementResponse, error) {
 	}
 
 	return &StatementResponse{
-		Saldo: &StatementSaldo{
-			Total:       customerBalance.Saldo,
-			Limite:      customerBalance.Limite,
+		Saldo: StatementSaldo{
+			Total:       customerBalance.AccountBalance,
+			Limite:      customerBalance.AccountLimit,
 			DataExtrato: time.Now(),
 		},
 		UltimasTransacoes: transactions,

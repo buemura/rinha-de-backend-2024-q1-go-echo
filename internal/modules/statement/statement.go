@@ -13,6 +13,6 @@ type StatementSaldo struct {
 }
 
 type StatementResponse struct {
-	Saldo             *StatementSaldo            `json:"saldo"`
-	UltimasTransacoes []*transaction.Transaction `json:"ultimas_transacoes"`
+	Saldo             StatementSaldo            `json:"saldo"`
+	UltimasTransacoes []transaction.Transaction `json:"ultimas_transacoes"`
 }

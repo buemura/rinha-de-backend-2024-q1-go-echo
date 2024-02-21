@@ -14,10 +14,18 @@ var (
 )
 
 func Connect() {
-	conn, err := pgxpool.New(context.Background(), config.DATABASE_URL)
+	dbConfig, err := pgxpool.ParseConfig(config.DATABASE_URL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create pool config: %v\n", err)
+		os.Exit(1)
+	}
+
+	dbConfig.MaxConns = 10
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), dbConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	Conn = conn
+	Conn = pool
 }
