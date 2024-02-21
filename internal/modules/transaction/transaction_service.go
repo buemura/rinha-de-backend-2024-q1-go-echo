@@ -103,16 +103,18 @@ func InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*Cre
 }
 
 func InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
-	_, err := database.Conn.Exec(
+	var accountBalance, accountLimit int
+	err := database.Conn.QueryRow(
 		context.Background(),
 		`
         UPDATE customers
         SET account_balance = account_balance + $1
         WHERE id = $2
+		RETURNING account_balance, account_limit
         `,
 		trx.Amount,
 		customerID,
-	)
+	).Scan(&accountBalance, &accountLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -125,20 +127,6 @@ func InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*Cr
         `,
 		customerID, trx.Amount, trx.Type, trx.Description, time.Now(),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	var accountBalance, accountLimit int
-	err = database.Conn.QueryRow(
-		context.Background(),
-		`
-        SELECT account_balance, account_limit
-        FROM customers
-        WHERE id = $1
-        `,
-		customerID,
-	).Scan(&accountBalance, &accountLimit)
 	if err != nil {
 		return nil, err
 	}
