@@ -3,12 +3,22 @@ package customer
 import (
 	"context"
 
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func GetCustomer(customerID int) (*Customer, error) {
-	rows, err := database.Conn.Query(
+type CustomerService struct {
+	db *pgxpool.Pool
+}
+
+func NewCustomerService(db *pgxpool.Pool) *CustomerService {
+	return &CustomerService{
+		db: db,
+	}
+} 
+
+func (s *CustomerService) GetCustomer(customerID int) (*Customer, error) {
+	rows, err := s.db.Query(
 		context.Background(),
 		"SELECT id, account_limit, account_balance FROM customers WHERE id = $1",
 		customerID,

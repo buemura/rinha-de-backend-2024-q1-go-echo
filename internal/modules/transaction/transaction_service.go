@@ -5,12 +5,22 @@ import (
 	"time"
 
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/customer"
-	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func GetTransactions(customerID int) ([]Transaction, error) {
-	rows, err := database.Conn.Query(
+type TransactionService struct {
+	db *pgxpool.Pool	
+}
+
+func NewTransactionService(db *pgxpool.Pool) *TransactionService {
+	return &TransactionService{
+		db: db,
+	}
+}
+
+func (s *TransactionService) GetTransactions(customerID int) ([]Transaction, error) {
+	rows, err := s.db.Query(
 		context.Background(),
 		`
         SELECT amount, type, description, created_at
@@ -36,23 +46,8 @@ func GetTransactions(customerID int) ([]Transaction, error) {
 	return transactions, nil
 }
 
-func CreateTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
-	var trxRes *CreateTransactionResponse
-	var err error
-	if trx.Type == "d" {
-		trxRes, err = InsertDebitTransaction(customerID, trx)
-	}
-	if trx.Type == "c" {
-		trxRes, err = InsertCreditTransaction(customerID, trx)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return trxRes, nil
-}
-
-func InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
-	tx, err := database.Conn.Begin(context.Background())
+func (s *TransactionService) InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+	tx, err := s.db.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -102,9 +97,9 @@ func InsertDebitTransaction(customerID int, trx *CreateTransactionRequest) (*Cre
 	}, nil
 }
 
-func InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
+func (s *TransactionService) InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*CreateTransactionResponse, error) {
 	var accountBalance, accountLimit int
-	err := database.Conn.QueryRow(
+	err := s.db.QueryRow(
 		context.Background(),
 		`
         UPDATE customers
@@ -119,7 +114,7 @@ func InsertCreditTransaction(customerID int, trx *CreateTransactionRequest) (*Cr
 		return nil, err
 	}
 
-	_, err = database.Conn.Exec(
+	_, err = s.db.Exec(
 		context.Background(),
 		`
         INSERT INTO transactions (customer_id, amount, type, description, created_at) 

@@ -8,11 +8,11 @@ import (
 
 type StatementSaldo struct {
 	Total       int       `json:"total"`
-	DataExtrato time.Time `json:"data_extrato"`
-	Limite      int       `json:"limite"`
+	RequestDate time.Time `json:"data_extrato"`
+	Limit      int       `json:"limite"`
 }
 
 type StatementResponse struct {
-	Saldo             StatementSaldo            `json:"saldo"`
-	UltimasTransacoes []transaction.Transaction `json:"ultimas_transacoes"`
+	Balance             StatementSaldo            `json:"saldo"`
+	TransactionHistory []transaction.Transaction `json:"ultimas_transacoes"`
 }

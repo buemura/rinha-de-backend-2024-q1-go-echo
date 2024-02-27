@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/database"
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/shared/helper"
 	"github.com/labstack/echo/v4"
 )
@@ -26,7 +27,15 @@ func createTransaction(c echo.Context) error {
 	if err := validate(body); err != nil {
 		return c.NoContent(http.StatusUnprocessableEntity)
 	}
-	trx, err := CreateTransaction(customerId, body)
+
+	var trx *CreateTransactionResponse
+	tService := NewTransactionService(database.Conn)
+	if body.Type == "c" {
+		trx, err = tService.InsertCreditTransaction(customerId, body)
+	}
+	if body.Type == "d" {
+		trx, err = tService.InsertDebitTransaction(customerId, body)
+	}
 	if err != nil {
 		return helper.HandleHttpError(c, err)
 	}

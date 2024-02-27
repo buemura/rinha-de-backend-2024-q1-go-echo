@@ -7,8 +7,20 @@ import (
 	"github.com/buemura/rinha-de-backend-2024-q1-go-echo/internal/modules/transaction"
 )
 
-func GetStatement(customerID int) (*StatementResponse, error) {
-	customerBalance, err := customer.GetCustomer(customerID)
+type StatementService struct {
+	cService customer.CustomerService
+	tService transaction.TransactionService
+}
+
+func NewStatementService(cService customer.CustomerService, tService transaction.TransactionService) *StatementService {
+	return &StatementService{
+		cService: cService,
+		tService: tService,
+	}
+}
+
+func (s *StatementService) GetStatement(customerID int) (*StatementResponse, error) {
+	customerBalance, err := s.cService.GetCustomer(customerID)
 	if err != nil {
 		if customerBalance == nil {
 			return nil, customer.ErrCustomerNotFound
@@ -16,17 +28,17 @@ func GetStatement(customerID int) (*StatementResponse, error) {
 		return nil, err
 	}
 
-	transactions, err := transaction.GetTransactions(customerID)
+	transactions, err := s.tService.GetTransactions(customerID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &StatementResponse{
-		Saldo: StatementSaldo{
+		Balance: StatementSaldo{
 			Total:       customerBalance.AccountBalance,
-			Limite:      customerBalance.AccountLimit,
-			DataExtrato: time.Now(),
+			Limit:      customerBalance.AccountLimit,
+			RequestDate: time.Now(),
 		},
-		UltimasTransacoes: transactions,
+		TransactionHistory: transactions,
 	}, nil
 }
